@@ -10,6 +10,9 @@ use Illuminate\Support\Facades\Auth;
 class PaymentController extends Controller
 {
     //
+
+
+
     public function generateToken(Request $request)
     {
         $user = User::where([
@@ -39,6 +42,20 @@ class PaymentController extends Controller
             ], 200);
     }
 
+    protected function compute_hash($secret, $payload)
+    {
+        $hexHash =  hash_hmac('sha256', json_encode($payload), $secret);
+        return $hexHash;
+    }
+
+
+    protected function hash_is_valid($secret, $payload, $verify)
+    {
+        $computed_hash = $this->compute_hash($secret, $payload);
+        error_log(hash_equals($verify, $computed_hash));
+        return hash_equals($verify, $computed_hash);
+    }
+
     public function generateVA(Request $request)
     {
         $user = Auth::user();
@@ -54,6 +71,15 @@ class PaymentController extends Controller
                     "message" => "Va number already exist"
                 ], 404);
         }
+
+        $signature = $request->header('signature');
+		$body = $request->post();
+		$secret = $user->secret;
+
+        if (!$this->hash_is_valid($secret, $body, $signature)) {
+            return response()->json(['rCode' => '006', 'message' => 'Invalid Signature']);
+        }
+
 
 
         $va = new VA();
