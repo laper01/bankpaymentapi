@@ -12,14 +12,20 @@ class PaymentController extends Controller
     //
     public function generateToken(Request $request)
     {
-        if (!Auth::attempt($request->only('user_id', 'user_secret', 'id_mitra'))) {
+        $user = User::where([
+            ["user_id" => $request->user_id],
+            ["user_secret" => $request->user_secret],
+            ["id_mitra" => $request->id_mitra],
+
+        ])->first();
+
+        if (!$user) {
             return response()
                 ->json([
                     "rCode" => "999",
                     "message" => "Mitra Not Registered"
                 ], 401);
         }
-        $user = User::where('user_id', $request->user_id)->first();
 
         $token = $user->createToken('auth_token')->plainTextToken;
 
@@ -37,19 +43,21 @@ class PaymentController extends Controller
     {
         $user = Auth::user();
 
-        $va = VA::where('va',$request->va)->first();
+        $va = VA::where('va', $request->va)->first();
 
-        if($va){
+        //cek signature
+
+        if ($va) {
             return response()
-            ->json([
-                "rCode" => "004",
-                "message" => "Va number already exist"
-            ], 404);
+                ->json([
+                    "rCode" => "004",
+                    "message" => "Va number already exist"
+                ], 404);
         }
 
 
         $va = new VA();
-        $va->user_id= $user->id;
+        $va->user_id = $user->id;
         $va->name = $request->name;
         $va->billing_type = $request->billing_type;
         $va->email = $request->email;
