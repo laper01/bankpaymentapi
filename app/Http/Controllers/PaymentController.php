@@ -15,12 +15,17 @@ class PaymentController extends Controller
 
     public function generateToken(Request $request)
     {
+
+        // dd($request);
+
+
         $user = User::where([
-            ["user_id" => $request->user_id],
-            ["user_secret" => $request->user_secret],
-            ["id_mitra" => $request->id_mitra],
+            ["user_id_ntb", '=', $request->user_id],
+            ["user_secret", '=', $request->user_secret],
+            ["id_mitra", '=', $request->id_mitra],
 
         ])->first();
+
 
         if (!$user) {
             return response()
@@ -74,7 +79,9 @@ class PaymentController extends Controller
 
         $signature = $request->header('signature');
 		$body = $request->post();
-		$secret = $user->secret;
+		$secret = $user->secret_key;
+
+        // error_log(json_encode(["si"=>$signature, "bo"=>$body, "sec"=>$secret]));
 
         if (!$this->hash_is_valid($secret, $body, $signature)) {
             return response()->json(['rCode' => '006', 'message' => 'Invalid Signature']);
@@ -91,10 +98,9 @@ class PaymentController extends Controller
         $va->datetime_expired = $request->datetime_expired;
         $va->description = $request->description;
         $va->tagihan = $request->tagihan;
-        $va->no_rrn = $request->no_rrn;
+        $va->no_rrn = "1234567";
         $va->va = $request->va;
         $va->payment_amount = $request->va;
-        $va->va_status = $request->va;
         $va->save();
 
         return response()->json([

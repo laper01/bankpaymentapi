@@ -18,7 +18,7 @@ use Illuminate\Support\Facades\Route;
 Route::post('/test/token', [PaymentController::class, 'generateToken']);
 
 Route::middleware('auth:sanctum')->group(function () {
-    Route::post('/test/va', 'PaymentController@generateVA');
+    Route::post('/test/va', [PaymentController::class, 'generateVA']);
 });
 
 Route::middleware('auth:sanctum')->get('/user', function (Request $request) {
